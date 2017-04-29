@@ -7,3 +7,4 @@ authors = ["Hiroki Kumamoto <kumabook@live.jp>"]
 serde        = "*"
 serde_derive = "*"
 serde_json   = "*"
+html5ever    = "*"

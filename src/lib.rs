@@ -2,6 +2,7 @@
 extern crate serde_derive;
 extern crate serde;
 extern crate serde_json;
+extern crate html5ever;
 
 mod object;
 mod image;
