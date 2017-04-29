@@ -9,6 +9,8 @@ mod image;
 mod audio;
 mod video;
 
+pub mod scraper;
+
 pub use object::Object;
 pub use image::Image;
 pub use audio::Audio;
