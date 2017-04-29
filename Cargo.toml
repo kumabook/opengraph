@@ -6,6 +6,12 @@ include = [
     "**/*.rs",
     "Cargo.toml",
 ]
+license = "MIT"
+homepage = "https://github.com/kumabook/opengraph"
+repository = "https://github.com/kumabook/opengraph.git"
+description = "Parses html and extracts Open Graph protocol markup"
+keywords = ["opengraph"]
+categories = []
 
 [dependencies]
 serde        = "*"
