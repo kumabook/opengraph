@@ -1,0 +1,9 @@
+[package]
+name = "opengraph"
+version = "0.1.0"
+authors = ["Hiroki Kumamoto <kumabook@live.jp>"]
+
+[dependencies]
+serde        = "*"
+serde_derive = "*"
+serde_json   = "*"
