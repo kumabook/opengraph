@@ -14,7 +14,7 @@ keywords = ["opengraph"]
 categories = []
 
 [dependencies]
-serde        = "*"
-serde_derive = "*"
-serde_json   = "*"
-html5ever    = "*"
+serde        = "^1"
+serde_derive = "^1"
+serde_json   = "^1"
+html5ever    = "^0"
