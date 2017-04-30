@@ -170,7 +170,7 @@ mod test {
 </head>
 </html>
                 "#;
-        let obj = extract(x.to_string());
+        let obj = extract(&mut x.to_string().as_bytes());
         assert!(obj.is_some());
         let obj = obj.unwrap();
         assert_eq!(&obj.title, "The Rock");
