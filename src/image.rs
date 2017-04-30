@@ -25,10 +25,9 @@ impl Image {
         if let Err(e) = Url::parse(&self.url) {
             match e {
                 ParseError::RelativeUrlWithoutBase => {
-                    self.url = format!("{}://{}/{}",
-                                       url.scheme(),
-                                       url.host_str().unwrap(),
-                                       self.url);
+                    if let Ok(url) = url.join(&self.url) {
+                        self.url = url.to_string();
+                    }
                 },
                 _ => (),
             }
