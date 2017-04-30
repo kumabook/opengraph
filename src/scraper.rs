@@ -1,25 +1,69 @@
+use std::io::Read;
+use std::str::FromStr;
+
 use html5ever::rcdom::{Document, Doctype, Text, Comment, Element};
 use html5ever::rcdom::{RcDom, Handle};
 use html5ever::{parse_document, Attribute};
 use html5ever::tendril::TendrilSink;
+
+use hyper::Url;
+use hyper::error::ParseError;
+use hyper::Client;
+use hyper::header::Connection;
+use hyper::header::ConnectionOption;
+use hyper::net::HttpsConnector;
+use hyper_native_tls::NativeTlsClient;
 
 use Object;
 use Image;
 use Audio;
 use Video;
 
-pub fn extract(html: String) -> Option<Object> {
-    let dom = parse_document(RcDom::default(), Default::default())
-        .from_utf8()
-        .read_from(&mut html.as_bytes())
-        .unwrap();
-    let mut og_props  = Vec::new();
-    walk(dom.document, &mut og_props);
-    if og_props.len() > 0 {
-        Some(Object::new(&og_props))
+pub fn scrape(url: &str) -> Option<Object> {
+    let tls        = NativeTlsClient::new().unwrap();
+    let connector  = HttpsConnector::new(tls);
+    let client     = Client::with_connector(connector);
+
+    let result = client.get(url)
+        .header(Connection(vec![ConnectionOption::Close]))
+        .send();
+    if result.is_err() {
+        return None;
+    }
+    let mut res = result.unwrap();
+    if res.status.is_success() {
+        extract(&mut res).map(|mut obj| {
+            obj.images = obj.images.iter().map(|i| {
+                let mut i = i.clone();
+                i.normalize(&res.url);
+                i
+            }).collect::<Vec<Image>>();
+            obj
+        })
     } else {
         None
     }
+}
+
+pub fn extract<R>(input: &mut R) -> Option<Object> where R: Read {
+    let dom = parse_document(RcDom::default(), Default::default())
+        .from_utf8()
+        .read_from(input)
+        .unwrap();
+    let mut og_props = Vec::new();
+    let mut images   = Vec::new();
+    let mut audios   = Vec::new();
+    let mut videos   = Vec::new();
+    walk(dom.document,
+         &mut og_props,
+         &mut images,
+         &mut audios,
+         &mut videos);
+    let mut obj = Object::new(&og_props);
+    obj.images.append(&mut images);
+    obj.audios.append(&mut audios);
+    obj.videos.append(&mut videos);
+    Some(obj)
 }
 
 fn walk(handle:    Handle,
