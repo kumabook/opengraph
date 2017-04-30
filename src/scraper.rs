@@ -1,13 +1,10 @@
 use std::io::Read;
-use std::str::FromStr;
 
 use html5ever::rcdom::{Document, Doctype, Text, Comment, Element};
 use html5ever::rcdom::{RcDom, Handle};
 use html5ever::{parse_document, Attribute};
 use html5ever::tendril::TendrilSink;
 
-use hyper::Url;
-use hyper::error::ParseError;
 use hyper::Client;
 use hyper::header::Connection;
 use hyper::header::ConnectionOption;
