@@ -4,6 +4,9 @@ use html5ever::{parse_document, Attribute};
 use html5ever::tendril::TendrilSink;
 
 use Object;
+use Image;
+use Audio;
+use Video;
 
 pub fn extract(html: String) -> Option<Object> {
     let dom = parse_document(RcDom::default(), Default::default())
@@ -20,7 +23,10 @@ pub fn extract(html: String) -> Option<Object> {
 }
 
 fn walk(handle:    Handle,
-        og_props:  &mut Vec<(String, String)>) {
+        og_props:  &mut Vec<(String, String)>,
+        images:    &mut Vec<Image>,
+        audios:    &mut Vec<Audio>,
+        videos:    &mut Vec<Video>) {
     let node = handle.borrow();
     match node.node {
         Document         => (),
@@ -29,12 +35,32 @@ fn walk(handle:    Handle,
         Comment(_)       => (),
         Element(ref name, _, ref attrs) => {
             let tag_name = name.local.as_ref();
-            let mut ps = extract_open_graph_metadata_from_tag(tag_name, attrs);
-            og_props.append(&mut ps);
+            match tag_name {
+                "meta" => {
+                    let mut ps = extract_open_graph_from_meta_tag(attrs);
+                    og_props.append(&mut ps);
+                },
+                "img" => {
+                    if let Some(image) = extract_image(attrs) {
+                        images.push(image);
+                    }
+                },
+                "audio" => {
+                    if let Some(audio) = extract_audio(attrs) {
+                        audios.push(audio);
+                    }
+                },
+                "videos" => {
+                    if let Some(video) = extract_video(attrs) {
+                        videos.push(video);
+                    }
+                },
+                _ => (),
+            }
         }
     }
     for child in node.children.iter() {
-        walk(child.clone(), og_props);
+        walk(child.clone(), og_props, images, audios, videos)
     }
 }
 
@@ -47,18 +73,15 @@ fn attr(attr_name: &str, attrs: &Vec<Attribute>) -> Option<String> {
     None
 }
 
-fn extract_open_graph_metadata_from_tag(tag_name: &str,
-                                            attrs: &Vec<Attribute>) -> Vec<(String, String)> {
+fn extract_open_graph_from_meta_tag(attrs: &Vec<Attribute>) -> Vec<(String, String)> {
     let mut og_props = vec!();
-    if tag_name == "meta" {
-        match extract_open_graph_prop("property", attrs) {
-            Some((key, content)) => og_props.push((key, content)),
-            None                 => (),
-        }
-        match extract_open_graph_prop("name", attrs) {
-            Some((key, content)) => og_props.push((key, content)),
-            None                 => (),
-        }
+    match extract_open_graph_prop("property", attrs) {
+        Some((key, content)) => og_props.push((key, content)),
+        None                 => (),
+    }
+    match extract_open_graph_prop("name", attrs) {
+        Some((key, content)) => og_props.push((key, content)),
+        None                 => (),
     }
     og_props
 }
@@ -75,6 +98,18 @@ fn extract_open_graph_prop<'a>(attr_name: &str, attrs: &Vec<Attribute>) -> Optio
                   } else {
                       None
                   })
+}
+
+fn extract_image(attrs: &Vec<Attribute>) -> Option<Image> {
+    attr("src", attrs).map(|src| Image::new(src.to_string()))
+}
+
+fn extract_audio(attrs: &Vec<Attribute>) -> Option<Audio> {
+    attr("src", attrs).map(|src| Audio::new(src.to_string()))
+}
+
+fn extract_video(attrs: &Vec<Attribute>) -> Option<Video> {
+    attr("src", attrs).map(|src| Video::new(src.to_string()))
 }
 
 #[cfg(test)]
