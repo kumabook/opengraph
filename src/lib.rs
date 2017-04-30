@@ -15,3 +15,4 @@ pub use object::Object;
 pub use image::Image;
 pub use audio::Audio;
 pub use video::Video;
+pub use scraper::extract;
