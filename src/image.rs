@@ -1,3 +1,6 @@
+use hyper::Url;
+use hyper::error::ParseError;
+
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
 pub struct Image {
     #[serde(rename = "type")]
@@ -17,5 +20,20 @@ impl Image {
             width:      None,
             height:     None,
         }
+    }
+    pub fn normalize(&mut self, url: &Url) -> &mut Image {
+        if let Err(e) = Url::parse(&self.url) {
+            match e {
+                ParseError::RelativeUrlWithoutBase => {
+                    self.url = format!("{}://{}/{}",
+                                       url.scheme(),
+                                       url.host_str().unwrap(),
+                                       self.url);
+                },
+                _ => (),
+            }
+            println!("{:?}", e);
+        }
+        self
     }
 }
