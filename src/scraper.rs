@@ -1,6 +1,13 @@
 use std::io::Read;
 
-use html5ever::rcdom::{Document, Doctype, Text, Comment, Element};
+use html5ever::rcdom::NodeData::{
+    Document,
+    Doctype,
+    Text,
+    Comment,
+    Element,
+    ProcessingInstruction
+};
 use html5ever::rcdom::{RcDom, Handle};
 use html5ever::{parse_document, Attribute};
 use html5ever::tendril::TendrilSink;
@@ -68,39 +75,39 @@ fn walk(handle:    Handle,
         images:    &mut Vec<Image>,
         audios:    &mut Vec<Audio>,
         videos:    &mut Vec<Video>) {
-    let node = handle.borrow();
-    match node.node {
-        Document         => (),
-        Doctype(_, _, _) => (),
-        Text(_)          => (),
-        Comment(_)       => (),
-        Element(ref name, _, ref attrs) => {
+    match handle.data {
+        Document       => (),
+        Doctype { .. } => (),
+        Text { .. }    => (),
+        Comment { .. } => (),
+        Element { ref name, ref attrs, ..} => {
             let tag_name = name.local.as_ref();
             match tag_name {
                 "meta" => {
-                    let mut ps = extract_open_graph_from_meta_tag(attrs);
+                    let mut ps = extract_open_graph_from_meta_tag(&attrs.borrow());
                     og_props.append(&mut ps);
                 },
                 "img" => {
-                    if let Some(image) = extract_image(attrs) {
+                    if let Some(image) = extract_image(&attrs.borrow()) {
                         images.push(image);
                     }
                 },
                 "audio" => {
-                    if let Some(audio) = extract_audio(attrs) {
+                    if let Some(audio) = extract_audio(&attrs.borrow()) {
                         audios.push(audio);
                     }
                 },
                 "videos" => {
-                    if let Some(video) = extract_video(attrs) {
+                    if let Some(video) = extract_video(&attrs.borrow()) {
                         videos.push(video);
                     }
                 },
                 _ => (),
             }
-        }
+        },
+        ProcessingInstruction { .. } => unreachable!()
     }
-    for child in node.children.iter() {
+    for child in handle.children.borrow().iter() {
         walk(child.clone(), og_props, images, audios, videos)
     }
 }
