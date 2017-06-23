@@ -121,7 +121,7 @@ fn attr(attr_name: &str, attrs: &Vec<Attribute>) -> Option<String> {
     None
 }
 
-fn extract_open_graph_from_meta_tag(attrs: &Vec<Attribute>) -> Vec<(String, String)> {
+pub fn extract_open_graph_from_meta_tag(attrs: &Vec<Attribute>) -> Vec<(String, String)> {
     let mut og_props = vec!();
     match extract_open_graph_prop("property", attrs) {
         Some((key, content)) => og_props.push((key, content)),
@@ -148,15 +148,15 @@ fn extract_open_graph_prop<'a>(attr_name: &str, attrs: &Vec<Attribute>) -> Optio
                   })
 }
 
-fn extract_image(attrs: &Vec<Attribute>) -> Option<Image> {
+pub fn extract_image(attrs: &Vec<Attribute>) -> Option<Image> {
     attr("src", attrs).map(|src| Image::new(src.to_string()))
 }
 
-fn extract_audio(attrs: &Vec<Attribute>) -> Option<Audio> {
+pub fn extract_audio(attrs: &Vec<Attribute>) -> Option<Audio> {
     attr("src", attrs).map(|src| Audio::new(src.to_string()))
 }
 
-fn extract_video(attrs: &Vec<Attribute>) -> Option<Video> {
+pub fn extract_video(attrs: &Vec<Attribute>) -> Option<Video> {
     attr("src", attrs).map(|src| Video::new(src.to_string()))
 }
 

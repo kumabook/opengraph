@@ -19,3 +19,9 @@ pub use audio::Audio;
 pub use video::Video;
 pub use scraper::scrape;
 pub use scraper::extract;
+pub use scraper::{
+    extract_open_graph_from_meta_tag,
+    extract_image,
+    extract_audio,
+    extract_video
+};
