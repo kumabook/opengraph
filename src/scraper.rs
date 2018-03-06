@@ -178,7 +178,7 @@ mod test {
 </html>
                 "#;
         let obj = extract(&mut x.to_string().as_bytes());
-        assert!(obj.is_some());
+        assert!(obj.is_ok());
         let obj = obj.unwrap();
         assert_eq!(&obj.title, "The Rock");
         assert_eq!(obj.obj_type, ObjectType::Movie);
