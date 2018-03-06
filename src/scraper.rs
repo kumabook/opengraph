@@ -23,14 +23,30 @@ use Image;
 use Audio;
 use Video;
 
+pub struct Opts {
+    include_images: bool,
+    include_audios: bool,
+    include_videos: bool,
+}
+
+impl Default for Opts {
+    fn default() -> Opts {
+        Opts {
+            include_images: false,
+            include_videos: false,
+            include_audios: false,
+        }
+    }
+}
+
 #[cfg(feature = "reqwest")]
-pub fn scrape(url: &str) -> Result<Object, Error> {
+pub fn scrape(url: &str, option: Opts) -> Result<Object, Error> {
     let client = reqwest::Client::builder()
         .timeout(Duration::new(30, 0))
         .build()?;
     let mut res = client.get(url).send()?;
     if res.status().is_success() {
-        extract(&mut res).map(|mut obj| {
+        extract(&mut res, option).map(|mut obj| {
             obj.images = obj.images.iter().map(|i| {
                 let mut i = i.clone();
                 i.normalize(&res.url());
@@ -43,7 +59,7 @@ pub fn scrape(url: &str) -> Result<Object, Error> {
     }
 }
 
-pub fn extract<R>(input: &mut R) -> Result<Object, Error> where R: Read {
+pub fn extract<R>(input: &mut R, option: Opts) -> Result<Object, Error> where R: Read {
     let dom = parse_document(RcDom::default(), Default::default())
         .from_utf8()
         .read_from(input)
@@ -56,7 +72,8 @@ pub fn extract<R>(input: &mut R) -> Result<Object, Error> where R: Read {
          &mut og_props,
          &mut images,
          &mut audios,
-         &mut videos);
+         &mut videos,
+         &option);
     let mut obj = Object::new(&og_props);
     obj.images.append(&mut images);
     obj.audios.append(&mut audios);
@@ -68,7 +85,8 @@ fn walk(handle:    Handle,
         og_props:  &mut Vec<(String, String)>,
         images:    &mut Vec<Image>,
         audios:    &mut Vec<Audio>,
-        videos:    &mut Vec<Video>) {
+        videos:    &mut Vec<Video>,
+        option:    &Opts) {
     match handle.data {
         Document       => (),
         Doctype { .. } => (),
@@ -82,18 +100,24 @@ fn walk(handle:    Handle,
                     og_props.append(&mut ps);
                 },
                 "img" => {
-                    if let Some(image) = extract_image(&attrs.borrow()) {
-                        images.push(image);
+                    if option.include_images {
+                        if let Some(image) = extract_image(&attrs.borrow()) {
+                            images.push(image);
+                        }
                     }
                 },
                 "audio" => {
-                    if let Some(audio) = extract_audio(&attrs.borrow()) {
-                        audios.push(audio);
+                    if option.include_audios {
+                        if let Some(audio) = extract_audio(&attrs.borrow()) {
+                            audios.push(audio);
+                        }
                     }
                 },
                 "video" => {
-                    if let Some(video) = extract_video(&attrs.borrow()) {
-                        videos.push(video);
+                    if option.include_videos {
+                        if let Some(video) = extract_video(&attrs.borrow()) {
+                            videos.push(video);
+                        }
                     }
                 },
                 _ => (),
@@ -102,7 +126,7 @@ fn walk(handle:    Handle,
         ProcessingInstruction { .. } => unreachable!()
     }
     for child in handle.children.borrow().iter() {
-        walk(child.clone(), og_props, images, audios, videos)
+        walk(child.clone(), og_props, images, audios, videos, option)
     }
 }
 
@@ -171,7 +195,7 @@ mod test {
 </head>
 </html>
                 "#;
-        let obj = extract(&mut x.to_string().as_bytes());
+        let obj = extract(&mut x.to_string().as_bytes(), Default::default());
         assert!(obj.is_ok());
         let obj = obj.unwrap();
         assert_eq!(&obj.title, "The Rock");
