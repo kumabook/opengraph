@@ -18,6 +18,7 @@ pub use object::Object;
 pub use image::Image;
 pub use audio::Audio;
 pub use video::Video;
+pub use error::Error;
 pub use scraper::Opts;
 pub use scraper::scrape;
 pub use scraper::extract;
