@@ -1,6 +1,6 @@
 [package]
 name = "opengraph"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Hiroki Kumamoto <kumabook@live.jp>"]
 include = [
     "**/*.rs",
