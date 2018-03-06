@@ -24,9 +24,9 @@ use Audio;
 use Video;
 
 pub struct Opts {
-    include_images: bool,
-    include_audios: bool,
-    include_videos: bool,
+    pub include_images: bool,
+    pub include_audios: bool,
+    pub include_videos: bool,
 }
 
 impl Default for Opts {
