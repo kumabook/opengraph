@@ -3,8 +3,8 @@ extern crate serde_derive;
 extern crate serde;
 extern crate serde_json;
 extern crate html5ever;
-extern crate hyper;
-extern crate hyper_native_tls;
+#[cfg(feature = "reqwest")]
+extern crate reqwest;
 
 mod object;
 mod image;
@@ -12,6 +12,7 @@ mod audio;
 mod video;
 
 pub mod scraper;
+pub mod error;
 
 pub use object::Object;
 pub use image::Image;

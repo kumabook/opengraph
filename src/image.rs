@@ -1,5 +1,5 @@
-use hyper::Url;
-use hyper::error::ParseError;
+use reqwest::Url;
+use reqwest::UrlError;
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
 pub struct Image {
@@ -24,7 +24,7 @@ impl Image {
     pub fn normalize(&mut self, url: &Url) -> &mut Image {
         if let Err(e) = Url::parse(&self.url) {
             match e {
-                ParseError::RelativeUrlWithoutBase => {
+                UrlError::RelativeUrlWithoutBase => {
                     if let Ok(url) = url.join(&self.url) {
                         self.url = url.to_string();
                     }

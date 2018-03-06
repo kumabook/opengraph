@@ -1,4 +1,5 @@
 use std::io::Read;
+use error::Error;
 
 use html5ever::rcdom::NodeData::{
     Document,
@@ -12,44 +13,37 @@ use html5ever::rcdom::{RcDom, Handle};
 use html5ever::{parse_document, Attribute};
 use html5ever::tendril::TendrilSink;
 
-use hyper::Client;
-use hyper::header::Connection;
-use hyper::header::ConnectionOption;
-use hyper::net::HttpsConnector;
-use hyper_native_tls::NativeTlsClient;
+#[cfg(feature = "reqwest")]
+use std::time::Duration;
+#[cfg(feature = "reqwest")]
+use reqwest;
 
 use Object;
 use Image;
 use Audio;
 use Video;
 
-pub fn scrape(url: &str) -> Option<Object> {
-    let tls        = NativeTlsClient::new().unwrap();
-    let connector  = HttpsConnector::new(tls);
-    let client     = Client::with_connector(connector);
-
-    let result = client.get(url)
-        .header(Connection(vec![ConnectionOption::Close]))
-        .send();
-    if result.is_err() {
-        return None;
-    }
-    let mut res = result.unwrap();
-    if res.status.is_success() {
+#[cfg(feature = "reqwest")]
+pub fn scrape(url: &str) -> Result<Object, Error> {
+    let client = reqwest::Client::builder()
+        .timeout(Duration::new(30, 0))
+        .build()?;
+    let mut res = client.get(url).send()?;
+    if res.status().is_success() {
         extract(&mut res).map(|mut obj| {
             obj.images = obj.images.iter().map(|i| {
                 let mut i = i.clone();
-                i.normalize(&res.url);
+                i.normalize(&res.url());
                 i
             }).collect::<Vec<Image>>();
             obj
         })
     } else {
-        None
+        Err(Error::Unexpected)
     }
 }
 
-pub fn extract<R>(input: &mut R) -> Option<Object> where R: Read {
+pub fn extract<R>(input: &mut R) -> Result<Object, Error> where R: Read {
     let dom = parse_document(RcDom::default(), Default::default())
         .from_utf8()
         .read_from(input)
@@ -67,7 +61,7 @@ pub fn extract<R>(input: &mut R) -> Option<Object> where R: Read {
     obj.images.append(&mut images);
     obj.audios.append(&mut audios);
     obj.videos.append(&mut videos);
-    Some(obj)
+    Ok(obj)
 }
 
 fn walk(handle:    Handle,
