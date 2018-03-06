@@ -91,7 +91,7 @@ fn walk(handle:    Handle,
                         audios.push(audio);
                     }
                 },
-                "videos" => {
+                "video" => {
                     if let Some(video) = extract_video(&attrs.borrow()) {
                         videos.push(video);
                     }
