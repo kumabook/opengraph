@@ -20,7 +20,7 @@ serde_json       = "^1"
 html5ever        = "^0.22"
 
 [dependencies.reqwest]
-version = "^0.8"
+version = "^0.9"
 optional = true
 
 [features]
